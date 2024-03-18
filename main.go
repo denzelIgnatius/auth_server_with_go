@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/denzelIgnatius/auth_server_with_go/database"
 
 	"github.com/gin-gonic/gin"
@@ -18,8 +16,7 @@ func init() {
 }
 
 func main() {
-	fmt.Println("Hello World!")
 	r := gin.Default()
-	r.POST("/createUser", controllers.AddUsers)
+	r.POST("/registerUser", controllers.AddUsers)
 	r.Run()
 }
