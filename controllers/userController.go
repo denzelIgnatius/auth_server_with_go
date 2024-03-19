@@ -34,7 +34,7 @@ func AddUsers(c *gin.Context) {
 	var result models.User
 	err := database.Collection.FindOne(context.TODO(), filter).Decode(&result)
 
-	if err != null || len(result.Username) != 0 {
+	if err != nil || len(result.Username) != 0 {
 		const errorMsg string = "Error: User already exists"
 		log.Println(errorMsg)
 		c.JSON(400, errorMsg)
@@ -49,8 +49,45 @@ func AddUsers(c *gin.Context) {
 		UpdatedAt: time.Now(),
 	}
 
-	_, err := database.Collection.InsertOne(context.TODO(), user)
-	if err != nil {
+	res, err := database.Collection.InsertOne(context.TODO(), user)
+	if err != nil || res != nil {
+		var errorMsg string = "Error: " + err.Error()
+		log.Println(errorMsg)
+		c.JSON(500, errorMsg)
+		return
+	}
+	c.JSON(200, gin.H{})
+}
+
+func DeleteUsers(c *gin.Context) {
+
+	var request struct {
+		Username string
+	}
+
+	c.Bind(&request)
+
+	if len(request.Username) == 0 {
+		const errorMsg string = "Error: Missing Input"
+		log.Println(errorMsg)
+		c.JSON(400, errorMsg)
+		return
+	}
+
+	filter := bson.D{{"username", request.Username}}
+	var findUser models.User
+	err := database.Collection.FindOne(context.TODO(), filter).Decode(&findUser)
+
+	if err != nil || len(findUser.Username) == 0 {
+		const errorMsg string = "Error: User does not exist"
+		log.Println(err)
+		log.Println(findUser.Username)
+		c.JSON(400, errorMsg)
+		return
+	}
+
+	deleteUser, err := database.Collection.DeleteOne(context.TODO(), filter)
+	if err != nil || deleteUser.DeletedCount != 1 {
 		var errorMsg string = "Error: " + err.Error()
 		log.Println(errorMsg)
 		c.JSON(500, errorMsg)

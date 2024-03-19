@@ -18,5 +18,6 @@ func init() {
 func main() {
 	r := gin.Default()
 	r.POST("/registerUser", controllers.AddUsers)
+	r.DELETE("/deleteUser", controllers.DeleteUsers)
 	r.Run()
 }
