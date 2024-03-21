@@ -30,13 +30,13 @@ func AddUsers(c *gin.Context) {
 		return
 	}
 
-	filter := bson.D{{"username", request.Username}}
+	filter := bson.D{{Key: "username", Value: request.Username}}
 	var result models.User
-	err := database.Collection.FindOne(context.TODO(), filter).Decode(&result)
+	database.Collection.FindOne(context.TODO(), filter).Decode(&result)
 
-	if err != nil || len(result.Username) != 0 {
+	if len(result.Username) == len(request.Username) {
 		const errorMsg string = "Error: User already exists"
-		log.Println(errorMsg)
+		log.Println(result.Username)
 		c.JSON(400, errorMsg)
 		return
 	}
@@ -50,7 +50,7 @@ func AddUsers(c *gin.Context) {
 	}
 
 	res, err := database.Collection.InsertOne(context.TODO(), user)
-	if err != nil || res != nil {
+	if err != nil || res == nil {
 		var errorMsg string = "Error: " + err.Error()
 		log.Println(errorMsg)
 		c.JSON(500, errorMsg)
