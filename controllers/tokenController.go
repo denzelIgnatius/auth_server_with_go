@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -68,4 +69,33 @@ func GetAuth(c *gin.Context) {
 		"token":      tokenString,
 		"expiration": expiration,
 	})
+}
+
+func ValidateAuth(c *gin.Context) {
+	var request struct {
+		Token string
+	}
+	c.Bind(&request)
+	token, err := jwt.Parse(request.Token, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("SECRET")), nil
+	})
+	if err != nil {
+		c.AbortWithError(500, err)
+	}
+	claim, ok := token.Claims.(jwt.MapClaims)
+	if ok && token.Valid {
+		log.Println(claim["Expiration"])
+		if float64(time.Now().Unix()) > claim["Expiration"].(float64) {
+			c.AbortWithStatus(http.StatusUnauthorized)
+		}
+		filter := bson.D{{Key: "username", Value: claim["Subject"].(string)}}
+		var result models.User
+		err := database.Collection.FindOne(context.TODO(), filter).Decode(&result)
+		if err != nil || len(result.Username) == 0 {
+			c.AbortWithStatus(http.StatusUnauthorized)
+		}
+	} else {
+		c.AbortWithStatus(http.StatusUnauthorized)
+	}
+
 }

@@ -20,5 +20,6 @@ func main() {
 	r.POST("/registerUser", controllers.AddUsers)
 	r.DELETE("/deleteUser", controllers.DeleteUsers)
 	r.POST("/getAuthentication", controllers.GetAuth)
+	r.POST("/validateAuth", controllers.ValidateAuth)
 	r.Run()
 }
